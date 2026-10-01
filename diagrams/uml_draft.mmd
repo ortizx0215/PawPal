@@ -1,0 +1,51 @@
+classDiagram
+    direction LR
+
+    class Owner {
+        +str name
+        +int available_minutes
+        +str preferred_walk_time
+        +list~Pet~ pets
+        +add_pet(pet: Pet) None
+        +remove_pet(pet_name: str) bool
+        +get_pet(pet_name: str) Pet
+        +get_all_tasks() list~Task~
+    }
+
+    class Pet {
+        +str name
+        +str species
+        +str breed
+        +int age
+        +list~Task~ tasks
+        +add_task(task: Task) None
+        +remove_task(title: str) bool
+        +get_pending_tasks() list~Task~
+    }
+
+    class Task {
+        +str title
+        +str category
+        +int duration_minutes
+        +str priority
+        +str preferred_time
+        +bool completed
+        +mark_complete() None
+        +priority_score() int
+        +fits_in(minutes_left: int) bool
+    }
+
+    class Schedule {
+        +Owner owner
+        +date day
+        +list~Task~ planned_tasks
+        +list~Task~ skipped_tasks
+        +generate() None
+        +total_minutes() int
+        +explain() str
+    }
+
+    Owner "1" o-- "0..*" Pet : owns
+    Pet "1" *-- "0..*" Task : needs
+    Schedule "0..*" --> "1" Owner : plans for
+    Schedule "1" --> "0..*" Task : orders
