@@ -1,16 +1,28 @@
 # PawPal+ Project Reflection
 
 ## 1. System Design
-
+ - Users should able to:
+ - Add pets
+ - See Feeding schedule
+- Add or edit tasks
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+in my UML design, I made 
+Owner: for whoever is usin the app. They have their name and emails and lets them keep track of the pets. 
+Pet: name of the pets, what type of pet, age., 
+Task: general to do list i.e feeding or vet visits. Descriptions, Due dates, and way to mark the task as completed.
+Walk: scheduled walk days and is more specific to the scheduled time and duration of the walk.
+
 
 **b. Design changes**
 
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
+- So we made 4 changes after reviewing the skeleton. Tasks are now able to records their pet by adding pet_name to task. 
+
+Then we added a SchedultedTask class. The app needed to be able to show a timed daily plan so not planned tasks carry start_time and reason. Owner also got day_start so that the scheduler knows when the day begins
+
+We moved Completion from Task to Schedule. this was because the completed flag on the task would never reset so if you were to mark daily walk completed then it would drop out of every future schedule. Putting it into schedule makes recurring tasks start fresh every day.
+
+Lastly, Priority became an Enum. Priority used to free test so a typo such as "High" would sort wrong without any error. Priority enum would catch bad values right away and gives each level a number for sorting.
 
 ---
 
