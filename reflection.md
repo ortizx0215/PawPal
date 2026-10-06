@@ -30,13 +30,36 @@ Lastly, Priority became an Enum. Priority used to free test so a typo such as "H
 
 **a. Constraints and priorities**
 
-- What constraints does your scheduler consider (for example: time, priority, preferences)?
+- Time: the owner's available_minutes is a hard limit. Generate_plan() adds task only while they still fit, and skips the rest with a reason. ("needs 45 min, only 35 min left")
+
+Priority: tasks are chosen high -> med -> low so important care is picked first
+
+Duration: when two tasks have the same priority, the shorter one goes first, which fits more tasks into the time.
+
+Start time: it doesn't affect which tasksa re picked. It's used to order the final plan and to find overlapping tasks.
+
+Due date and completion: only tasks due today that aren't already done are considered. Recurring tasks come back on their next due date.
+
 - How did you decide which constraints mattered most?
+
+Priority comes first because pet health matters the most. Missing medication or a meal can overly hurt the pet.
+
+Time is the hard limit because te owner can't make more time. 
+
+Duration is the tiebreaker. It fits more tasks in, but it never actually beats the prority. A long high-priority walk wins over two short low priority tasks.
+
+Start time is for display and warnings, not selection. The owner already chose when tasks happen, so the scheduler respects those tiems instead of moving things arond.
+
+We just left out Preferences.
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
+
+My scheduler only warns about conflicts. It doesn't fix them. If two tasks overlap (like Mochi's morning walk at 8:00 and Luna's vet call at 8:10), `detect_conflicts()` prints a warning but both tasks stay in the plan, and both count against the owner's available minutes even though they can't be done at the same time. A smarter scheduler would move the lower-priority task to the next open slot.
+
+I think this is reasonable because the owner knows things the app doesn't. Some "conflicts" aren't real problems, like brushing Mochi's teeth right before the walk, or feeding both pets at once. If the app moved tasks on its own, it could push something like medication to a bad time. Warning instead of auto-fixing keeps the owner in control, keeps the code simple, and the program never crashes over a conflict. It just reports it.
 
 ---
 

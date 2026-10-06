@@ -45,15 +45,22 @@ pip install -r requirements.txt
 ## 🖥️ Sample Output
 
 ```
-Today's Schedule - Thursday, October 01, 2026
+Today's Schedule - Tuesday, October 06, 2026
 ============================================
-Plan for Jordan (65/90 min):
-  07:30  Breakfast for Mochi (10 min) [high]
+Plan for Jordan (85/90 min):
   08:00  Morning walk for Mochi (30 min) [high]
+  08:00  Brush teeth for Mochi (5 min) [medium]
+  08:10  Vet call for Luna (15 min) [high]
   08:45  Medication for Luna (5 min) [high]
+  17:00  Litter box for Luna (10 min) [medium]
   17:00  Play session for Luna (20 min) [medium]
 Skipped:
-  Grooming for Mochi [low] - needs 45 min, only 25 min left
+  Grooming for Mochi [low] - needs 45 min, only 5 min left
+
+Warnings:
+  Conflict (Mochi has two tasks at once): 'Morning walk' (08:00-08:30) overlaps 'Brush teeth' (08:00-08:05)
+  Conflict (Mochi and Luna both need you): 'Morning walk' (08:00-08:30) overlaps 'Vet call' (08:10-08:25)
+  Conflict (Luna has two tasks at once): 'Play session' (17:00-17:20) overlaps 'Litter box' (17:00-17:10)
 ```
 
 
@@ -75,14 +82,32 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
+All scheduling logic lives in `pawpal_system.py`. Run `python main.py` to see each feature in the terminal.
 
-| Feature | Method(s) | Notes |
-|---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Feature | Method(s) | What it does |
+|---------|-----------|--------------|
+| Sorting by time | `Scheduler.sort_by_time()` | Orders tasks by date and start time |
+| Sorting by priority | `Scheduler.sort_by_priority()` | High → medium → low; ties go to the shorter task, then the earlier one |
+| Filtering | `Scheduler.filter_tasks()`, `filter_by_pet()`, `filter_by_status()` | Shows tasks for one pet, by completion status, or both |
+| Daily plan | `Scheduler.generate_plan()`, `explain()` | Keeps the most important tasks that fit the owner's time and explains what was skipped |
+| Conflict detection | `Scheduler.detect_conflicts()`, `Task.overlaps()` | Warns when tasks start together or overlap, for the same pet or different pets |
+| Recurring tasks | `Task.mark_complete()`, `Scheduler.complete_task()`, `Frequency.interval()` | Completing a daily or weekly task creates its next occurrence |
+
+### Sorting
+`sort_by_time()` uses `sorted()` with a lambda key, `key=lambda t: t.start()`. `start()` combines the task's date and time, so tomorrow's 07:30 sorts after today's 18:30. `sort_by_priority()` sorts on the tuple `(-priority, duration, start)`. Python compares tuples left to right, so priority decides first and the other fields only break ties.
+
+### Filtering
+`filter_tasks(pet_name=None, completed=None)` combines filters. Any filter left as `None` is ignored, so `filter_tasks(pet_name="Luna", completed=False)` returns Luna's unfinished tasks. Pet names match regardless of capitalization. `filter_by_pet()` and `filter_by_status()` are shortcuts that call it.
+
+### Conflict detection
+`detect_conflicts()` sorts today's tasks by start time and checks each pair for a shared start time or an overlapping time window. It is lightweight: it returns a list of warning messages and never raises an error, so the app keeps running and the plan is still usable. Each warning says whether one pet has two tasks at once or two pets need the owner at the same time. Because the list is sorted, it stops checking a task once later tasks start after it ends.
+
+### Recurring tasks
+Each task has a `Frequency` (`ONCE`, `DAILY` or `WEEKLY`). When `complete_task()` marks a repeating task done, `mark_complete()` creates a copy due one day or one week later and adds it to the same pet. The next date counts from whichever is later, the due date or the day it was completed, so a task finished late doesn't come back already overdue. Completing the same task twice doesn't create a duplicate.
+
+### Tradeoffs
+- **Conflicts are warned about, not fixed.** Both overlapping tasks stay in the plan. The owner decides which conflicts matter.
+- **Greedy planning.** The highest-priority tasks are kept first, even if a different mix would use more of the available time.
 
 ## 📸 Demo Walkthrough
 
