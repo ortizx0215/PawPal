@@ -205,27 +205,34 @@ class Scheduler:
             key=lambda t: (-t.priority.value, t.duration_minutes, t.start()),
         )
 
+    def find_conflicts(self, day: date | None = None) -> list[tuple[Task, Task]]:
+        """Return each pair of tasks (earlier first) that start together or overlap."""
+        tasks = self.sort_by_time(self.get_tasks_for_day(day))
+        pairs = []
+        for i, a in enumerate(tasks):
+            for b in tasks[i + 1:]:
+                if b.start() > a.start() and b.start() >= a.end():
+                    break  # sorted by start, so nothing later can overlap a
+                pairs.append((a, b))
+        return pairs
+
     def detect_conflicts(self, day: date | None = None) -> list[str]:
         """Return a warning for each pair of tasks that start together or overlap.
 
         Lightweight by design: conflicts are reported as messages, never raised,
         so the caller can show them and still use the plan.
         """
-        tasks = self.sort_by_time(self.get_tasks_for_day(day))
         warnings = []
-        for i, a in enumerate(tasks):
-            for b in tasks[i + 1:]:
-                if b.start() > a.start() and b.start() >= a.end():
-                    break  # sorted by start, so nothing later can overlap a
-                if a.pet_name == b.pet_name:
-                    who = f"{a.pet_name} has two tasks at once"
-                else:
-                    who = f"{a.pet_name} and {b.pet_name} both need you"
-                warnings.append(
-                    f"Conflict ({who}): '{a.description}' "
-                    f"({a.time:%H:%M}-{a.end():%H:%M}) overlaps "
-                    f"'{b.description}' ({b.time:%H:%M}-{b.end():%H:%M})"
-                )
+        for a, b in self.find_conflicts(day):
+            if a.pet_name == b.pet_name:
+                who = f"{a.pet_name} has two tasks at once"
+            else:
+                who = f"{a.pet_name} and {b.pet_name} both need you"
+            warnings.append(
+                f"Conflict ({who}): '{a.description}' "
+                f"({a.time:%H:%M}-{a.end():%H:%M}) overlaps "
+                f"'{b.description}' ({b.time:%H:%M}-{b.end():%H:%M})"
+            )
         return warnings
 
     # --- Planning ----------------------------------------------------------
