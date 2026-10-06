@@ -68,12 +68,22 @@ I think this is reasonable because the owner knows things the app doesn't. Some 
 **a. How you used AI**
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
+
+Making the first Mermaid UML with the four ideas: owner, pet, tasks, schedules. I had a hard time trying to figure out HOW I wanted to do it so AI gave me a really good frame of how to structure it.
+
 - What kinds of prompts or questions were most helpful?
+
+The prompts that helped the most were the ones where I asked it to double check any changes as well as the ones where I had it make a change and ask WHY it decided to make that change. It really helped me understand the logic behind their decisions.
 
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
+
+So while asking about the Mermaid UML, Claude had six ideas for it. I only approved 4 of the six. One of the fixes would have removed the owner's prefered walk time because I wasn't sure if I wanted to add that preference just yet and if it were to get added, it would have messed up with the workflow I had going on in my head.
+
 - How did you evaluate or verify what the AI suggested?
+
+Asking for the reasoning was the main check. For each fix, I looked at the problem it described and asked myself whether it would actualyl break something in my app. 
 
 ---
 
@@ -82,13 +92,22 @@ I think this is reasonable because the owner knows things the app doesn't. Some 
 **a. What you tested**
 
 - What behaviors did you test?
+
+The behaviors I tested were Sorting, Recurring Tasks, Conflict Detection, Daily plan, and Basics & Filtering.
+
 - Why were these tests important?
+
+These tests were important because these tests target the edge cases, where scheduling bugs are hardest to notice by hand. The tests also use a fixed date instead of today's date so they give the same result whenever they run. 
 
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
+
+I'm pretty confident. Like a 3.5 - 4 out of 5. All 22 tests pass and they cover the core behaviors and the edge cases most liekly to break them, like back-to-back tasks, a task that exactly fills the time budget, and a task completed late. I also tried the full workflow in the Streamlit app and checked that the plan, warnings and next-day tasks came out as expected.
+
 - What edge cases would you test next if you had more time?
 
+I would try tasks that cross into midnight since conflicts are only checked within one day so a task from 11:30pm - 12:30 am isn't compared with a task at 12:15 AM the next day.
 ---
 
 ## 5. Reflection
@@ -97,10 +116,17 @@ I think this is reasonable because the owner knows things the app doesn't. Some 
 
 - What part of this project are you most satisfied with?
 
+I am satisfied with how recurring tasks work. My first ever design was to store completion as a flag that never reset, so a daily walk marked done would disappread from every future schedule. The final design treats each task as one occurence: completing it creates the next one, one day or one week later. 
+
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
 
+I would link tasks directly to the pets instead of by name. Task stores pet_name as text, so renaming or remove a pet breaks the link. Storing a reference to the Pet object or a unique ID, would fix both of the known gaps.
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+
+Claude was most useful when I made it explain its reasoning behind its suggestions and deciding for myself. Asking for its opinions before changes let me accept only the fixes I agreed with
+
+Questioning why completion shouldn't live in two places led to a better design than either of us started with.
