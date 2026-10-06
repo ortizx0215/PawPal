@@ -42,6 +42,100 @@ pip install -r requirements.txt
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
 
+## 🗺️ System Design (UML)
+
+Final class diagram (source: [`diagrams/uml_final.mmd`](diagrams/uml_final.mmd)). GitHub renders it automatically.
+
+```mermaid
+classDiagram
+    direction LR
+
+    class Priority {
+        <<enumeration>>
+        LOW = 1
+        MEDIUM = 2
+        HIGH = 3
+    }
+
+    class Frequency {
+        <<enumeration>>
+        ONCE
+        DAILY
+        WEEKLY
+        +interval() timedelta
+    }
+
+    class Owner {
+        <<dataclass>>
+        +str name
+        +int available_minutes
+        +list~Pet~ pets
+        +add_pet(pet: Pet) None
+        +remove_pet(pet_name: str) bool
+        +get_pet(pet_name: str) Pet
+        +get_all_tasks() list~Task~
+    }
+
+    class Pet {
+        <<dataclass>>
+        +str name
+        +str species
+        +str breed
+        +int age
+        +list~Task~ tasks
+        +add_task(task: Task) None
+        +remove_task(task: Task) bool
+        +get_tasks(include_completed: bool) list~Task~
+    }
+
+    class Task {
+        <<dataclass>>
+        +str description
+        +time time
+        +int duration_minutes
+        +Priority priority
+        +Frequency frequency
+        +date due_date
+        +bool completed
+        +str pet_name
+        +start() datetime
+        +end() datetime
+        +is_due_on(day: date) bool
+        +overlaps(other: Task) bool
+        +mark_complete(completed_on: date) Task
+    }
+
+    class Scheduler {
+        +Owner owner
+        +list~Task~ plan
+        +list~tuple~ skipped
+        +get_tasks_for_day(day: date) list~Task~
+        +filter_tasks(pet_name: str, completed: bool) list~Task~
+        +filter_by_pet(pet_name: str) list~Task~
+        +filter_by_status(completed: bool) list~Task~
+        +sort_by_time(tasks: list~Task~) list~Task~$
+        +sort_by_priority(tasks: list~Task~) list~Task~$
+        +find_conflicts(day: date) list~tuple~
+        +detect_conflicts(day: date) list~str~
+        +generate_plan(day: date) list~Task~
+        +total_minutes() int
+        +complete_task(task: Task, completed_on: date) Task
+        +explain() str
+    }
+
+    Owner "1" o-- "0..*" Pet : owns
+    Pet "1" *-- "0..*" Task : needs
+    Task --> Priority : ranked by
+    Task --> Frequency : repeats on
+    Task ..> Task : mark_complete() creates next occurrence
+    Scheduler "0..*" --> "1" Owner : manages
+    Scheduler ..> Task : filters, sorts, plans
+    Scheduler ..> Pet : complete_task() adds next occurrence
+
+    note for Task "One Task = one occurrence on one due_date.\npet_name links back to its Pet by name."
+    note for Scheduler "skipped holds (Task, reason) pairs.\nfind_conflicts returns (Task, Task) pairs.\nmark_complete / complete_task return None for one-time tasks."
+```
+
 ## 🖥️ Sample Output
 
 ```
