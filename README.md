@@ -68,17 +68,46 @@ Warnings:
 
 ```bash
 # Run the full test suite:
-pytest
+python -m pytest
 
-# Run with coverage:
-pytest --cov
+# Show each test name as it runs:
+python -m pytest -v
 ```
 
-Sample test output:
+### What the tests cover
+
+The 22 tests in `tests/test_pawpal.py` use a fixed date, so they give the same result whenever they run.
+
+- **Sorting:** tasks come back in time order and the original list is unchanged. A task tomorrow morning sorts after one this evening, two tasks at the same time keep the order they were added, and priority ties go to the shorter task, then the earlier one.
+- **Recurring tasks:** completing a daily task creates one for the next day, and a weekly task creates one a week later. One-time tasks don't repeat. A task finished late comes back counted from the day it was finished, a weekly task finished early keeps its original schedule, and completing the same task twice doesn't create a duplicate.
+- **Conflict detection:** two tasks at the same time are flagged, and overlaps between two pets name both pets. One long task conflicts with every task inside it. Back-to-back tasks (one ends at 08:30, the next starts at 08:30) are not flagged, and completed tasks and tasks on other days are ignored.
+- **Daily plan:** an owner with no tasks gets an empty plan and "No tasks scheduled." A task that exactly fills the time budget is kept. A task that doesn't fit is skipped with a reason, and smaller tasks after it can still be scheduled.
+- **Filtering and basics:** filters by pet and by status work together, and pet names match regardless of capitalization. Adding a task adds it to the pet, and completing a task marks it done.
+
+### Sample test output
 
 ```
-# Paste your pytest output here
+============================= test session starts ==============================
+platform darwin -- Python 3.12.7, pytest-7.4.4, pluggy-1.0.0
+rootdir: /Users/vyeagra/COSC491/PawPal
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.2.0
+collected 22 items
+
+tests/test_pawpal.py ......................                              [100%]
+
+============================== 22 passed in 0.01s ==============================
 ```
+
+### Confidence level: ⭐⭐⭐⭐☆ (4/5)
+
+All 22 tests pass. They cover the main scheduling behaviors (sorting, recurring tasks, conflict detection and planning) and the edge cases most likely to break them, such as empty plans, tasks at the same time, back-to-back tasks and a task that exactly fills the time budget. It's not 5 stars because of a few known gaps that aren't tested yet:
+
+- Conflicts are only checked within one day, so a task that runs past midnight isn't checked against the next morning's tasks.
+- Completing a repeating task whose pet has been removed creates the next task but doesn't attach it to any pet.
+- If a pet has two identical tasks, `remove_task` removes the first match, which may not be the one you meant.
+- The Streamlit UI is only tested by hand.
 
 ## 📐 Smarter Scheduling
 
@@ -113,10 +142,13 @@ Each task has a `Frequency` (`ONCE`, `DAILY` or `WEEKLY`). When `complete_task()
 
 Describe your app in numbered steps so a reader can follow along without watching a video:
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+1. **Start the app.** Run `streamlit run app.py`. The page opens with a short welcome and a collapsible "How it works" guide.
+2. **Set up the owner.** In the **Owner** section, enter your name and how many minutes you have for pet care today (for example, `60`). This is the time budget the scheduler plans around.
+3. **Add pets.** In **Add a Pet**, type a name (for example, `Mochi`), pick a species and click **Add pet**. Add a second pet such as `Luna` the cat. The app won't add the same name twice, and the pets appear in a list below the form.
+4. **Schedule tasks.** In **Schedule a Task**, choose a pet and enter a task name, start time, duration, how often it repeats (once, daily or weekly) and a priority. Click **Add task**. For example, add a 30-minute high-priority daily `Morning walk` for Mochi at 08:00 and a 15-minute medium-priority `Breakfast` for Luna at 08:15.
+5. **Review the task table.** Every task appears in a **Current tasks** table, sorted by time, with its pet, duration, priority, how often it repeats and whether it's done.
+6. **Generate the schedule.** In **Build Schedule**, click **Generate schedule**. PawPal+ keeps the highest-priority tasks that fit your time and lists them in time order. A summary shows how many minutes are used. With the example tasks, this is "Planned 2 task(s): 45 of 60 minutes."
+7. **Read warnings and explanations.** If tasks overlap, a yellow warning names the tasks and says whether one pet has two tasks at once or two pets need you at the same time. With the example tasks, Mochi's walk (08:00-08:30) overlaps Luna's breakfast (08:15-08:30), so the warning says "Mochi and Luna both need you." Below that, a text summary lists each planned task and gives a reason for any task that didn't fit (for example, "needs 20 min, only 10 min left").
+8. **Complete a task.** Pick a task from **Mark a task complete** and click **Complete**. The table shows it as done. If the task repeats, a message gives the date of the next one (for example, "Done! Next 'Morning walk' is due Wed 10/07."), and the new task is added to the table. One-time tasks show "won't repeat." Generate the schedule again and the completed task is no longer in today's plan.
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
